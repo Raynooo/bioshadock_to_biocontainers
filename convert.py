@@ -7,6 +7,7 @@ import sys
 import os
 import re
 
+from specs import *
 
 def treat_this_label (crtKey, crtVal):
     if crtKey.endswith("description"):
@@ -53,3 +54,5 @@ labels = dfp.labels
 #print labels
 
 parsing_labels (labels)
+
+print SPECDICT
