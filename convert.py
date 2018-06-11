@@ -48,6 +48,11 @@ def parsing_labels (crtLabels):
         #print crtLabels.get(key)
         newPair = treat_this_label (key, crtLabels.get(key))
 
+def parse_comment_line (line, lookup_dict):
+    for key in lookup_dict.keys():
+        crt_expr=re.compile(lookup_dict.get(key), re.IGNORECASE)
+        if crt_expr.search(line):
+            print key + " found in " + line
 
 #################MAIN#####################
 
@@ -57,6 +62,8 @@ cmt_line_re = "^[\s]*#"
 #docker_file = None
 
 ids=get_tools_ids(TOOLSPATH, BLACKLIST)
+print len(ids)
+
 
 for crt_id in ids:
     crt_Dockerfile=get_tool_dockerfile(DOCKERFILESROOt, crt_id)
@@ -67,8 +74,8 @@ for crt_id in ids:
     lines = crt_Dockerfile.split("\n")
     for line in lines:
         if re.search(cmt_line_re, line):
-            print line
-            #TODO: search comment line for metadata
+            #line
+            parse_comment_line (line, SPECDICT)
 
 
     #pprint (dfp.json)

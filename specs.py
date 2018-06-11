@@ -2,12 +2,12 @@
 #The Dockerfile's LABELs and comments will be searched for these terms and hopefully everything will be found
 
 SPECDICT={
-    "base_image":"TODO",
-    "software.version":"[[V|v]ersion]+",
-    "software":"[[N|n]ame]+",
-    "about.summary":"TODO",
-    "about.home":"TODO",
+    #"base_image":"TODO",
+    "software.version":"(software)[\s]*(version)",
+    "software":"(name)",
+    "about.summary":"(description)",
+    "about.home":"(website)",
     "about.documentation":"TODO",
-    "about.license":"TODO",
-    "MAINTAINER":"MAINTAINER"
+    "about.license":"(license)",
+    #"MAINTAINER":"MAINTAINER"
 }
