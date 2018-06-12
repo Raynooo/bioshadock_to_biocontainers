@@ -16,7 +16,6 @@ DOCKERFILESROOt="https://docker-ui.genouest.org/container/"
 EXTRAREGEX="(:)*(\s)*"
 EMPTY_RE = re.compile("^[\s]*$")
 
-
 ##############Acquiring the original Dockerfiles#################
 
 def get_tools_ids (url,ignoreRegex):
@@ -39,17 +38,6 @@ def get_tool_dockerfile (url, id):
     return r.json().get("meta").get("Dockerfile")
 
 ###########Treating them##############
-
-def treat_this_label (crtKey, crtVal):
-    return 1
-
-def parsing_labels (crtLabels):
-    #print type(crtLabels)
-    #print crtLabels.keys()
-    for key in crtLabels.keys():
-        #print key
-        #print crtLabels.get(key)
-        newPair = treat_this_label (key, crtLabels.get(key))
 
 def parse_comment_line (line, metadataList):
     for crt_meta in metadataList:
