@@ -13,6 +13,9 @@ from specs import *
 BLACKLIST=re.compile("^(bioconda|debian)")
 TOOLSPATH="https://docker-ui.genouest.org/container/all?light=true"
 DOCKERFILESROOt="https://docker-ui.genouest.org/container/"
+EXTRAREGEX="(:)*(\s)*"
+EMPTY_RE = re.compile("^[\s]*$")
+
 
 ##############Acquiring the original Dockerfiles#################
 
@@ -48,11 +51,25 @@ def parsing_labels (crtLabels):
         #print crtLabels.get(key)
         newPair = treat_this_label (key, crtLabels.get(key))
 
-def parse_comment_line (line, lookup_dict):
-    for key in lookup_dict.keys():
-        crt_expr=re.compile(lookup_dict.get(key), re.IGNORECASE)
-        if crt_expr.search(line):
-            print key + " found in " + line
+def parse_comment_line (line, metadataList):
+    for crt_meta in metadataList:
+        crt_expr=re.compile(crt_meta.get("regex"), re.IGNORECASE)
+        if crt_meta.get("context")=="comment" and crt_expr.search(line):
+            #print crt_meta.get("destLabel") + " found in " + line
+            split_regex = re.compile(crt_meta.get("regex")+EXTRAREGEX, re.IGNORECASE)
+            crt_value = split_regex.split(line)[-1]
+            if not EMPTY_RE.search(crt_value):
+                #print crt_meta.get("destLabel") + " found: " + crt_value
+                #crt_meta["value"]=crt_value
+                return [crt_meta.get("destLabel"), crt_value]
+    return None
+
+def look_for_this_meta(metadata_desc, dfp):
+    for crt_inst in dfp.structure:
+        if crt_inst.get("instruction")==metadata_desc.get("context"):
+            #print crt_inst.get("value")
+            return [metadata_desc.get("destLabel"), crt_inst.get("value")]
+    return None
 
 #################MAIN#####################
 
@@ -62,24 +79,30 @@ cmt_line_re = "^[\s]*#"
 #docker_file = None
 
 ids=get_tools_ids(TOOLSPATH, BLACKLIST)
-print len(ids)
-
+#print len(ids)
 
 for crt_id in ids:
+    this_tools_labels = list()
+    ##Adding the tool's name to the labels
+    this_tools_labels.append(["software",crt_id.split("/")[-1]])
+
     crt_Dockerfile=get_tool_dockerfile(DOCKERFILESROOt, crt_id)
-    #print crt_id
-    dfp = DockerfileParser()
-    dfp.content = crt_Dockerfile
-    #pprint (dfp.labels)
     lines = crt_Dockerfile.split("\n")
+    ##Extracting what we can from the comments
     for line in lines:
         if re.search(cmt_line_re, line):
-            #line
-            parse_comment_line (line, SPECDICT)
-
-
-    #pprint (dfp.json)
-    #print dfp.labels
-    #pprint (dfp.structure)
-    #parsing_labels (dfp.labels)
+            crt_label=parse_comment_line (line, METADESC)
+            if not crt_label==None:
+                this_tools_labels.append(crt_label)
+    ##Parsing the Dockerfile with DockerfileParser library
+    dfp = DockerfileParser()
+    dfp.content = crt_Dockerfile
+    ##Extracting labels coming from instructions
+    for crt_meta in METADESC:
+        if not crt_meta.get("context")=="comment":
+            crt_label=look_for_this_meta(crt_meta, dfp)
+            if not crt_label==None:
+                this_tools_labels.append(crt_label)
+    ###TODO: write the modified Dockerfile into the proper directory (following BioContainers logic)
+    print this_tools_labels
 
