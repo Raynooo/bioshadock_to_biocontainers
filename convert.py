@@ -92,12 +92,35 @@ def update_version_and_name (labels):
 
 #################Writing output#####################
 
+def create_labels_line (labelsDict):
+    myLines=list()
+    for crt_meta in labelsDict.keys():
+        print (crt_meta)
+    return "TODO"
+
+def print_in_order (labels, dfparsed, target_dfile):
+    ##We only need to insert our labels at the start, after the FROM command
+    ##To keep the order and the comments, we'll use dockerfile.content instead of dockerfile.json
+    from_passed = False
+    lines = dfparsed.content.split("\n")
+    for line in lines:
+        target_dfile.write(line+"\n")
+        if re.search("^[\s]*FROM", line):
+            from_passed = True
+            myLabels = create_labels_line (labels)
+            target_dfile.writelines(["\n","#####AUTO GENERATED LABELS#####\n",myLabels,"\n#####END OF INSERTION#####\n"])
+
+
 def output_dockerfile (labels, dfparsed, path):
     labels = update_version_and_name (labels)
     crt_path = os.path.join(path,labels.get("software"),labels.get("software.version"))
     if not os.path.exists(crt_path):
         os.makedirs(crt_path)
+    dockerfile = open (os.path.join(crt_path, "Dockerfile"), 'w')
 
+    print_in_order (labels, dfparsed, dockerfile)
+
+    dockerfile.close()
 
 #################MAIN#####################
 
@@ -142,7 +165,6 @@ for crt_id in ids:
             if not crt_label==None:
                 #this_tools_labels.append(crt_label)
                 this_tools_labels[crt_label[0]]=crt_label[1]
-    ###TODO: write the modified Dockerfile into the proper directory (following BioContainers logic)
     #print (this_tools_labels)
     output_dockerfile (this_tools_labels, dfp, OUTROOT)
 
