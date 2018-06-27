@@ -72,11 +72,13 @@ def look_for_this_meta(metadata_desc, dfp):
 def find_meta_in_instruction (meta_desc, instPieces):
     crt_expr = re.compile(meta_desc.get("regex"), re.IGNORECASE)
     for crt_piece in instPieces:
+        #print (crt_piece)
         if crt_expr.search (crt_piece):
             crt_piece = crt_piece.replace ('"', '')
             return extract_meta_from_string(meta_desc, crt_piece)
 
 def extract_meta_from_string (meta_desc, string_with_meta):
+    #print (string_with_meta)
     split_regex = re.compile(meta_desc.get("regex")+EXTRAREGEX, re.IGNORECASE)
     crt_value = split_regex.split(string_with_meta)[-1]
     if not EMPTY_RE.search(crt_value):

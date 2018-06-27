@@ -3,12 +3,13 @@
 METADESC=[
     {
         "destLabel" : "base_image",
-        "regex" : ".+",
+        "regex" : "^[\s]*",
         "context" : "FROM",
     },
     {
         "destLabel" : "software.version",
-        "regex" : "((software)[\s]*(version))|(ANNOT.Version)",
+        #"regex" : "((software)[\s]*(version))|(ANNOT.Version)",
+        "regex" : "((software|annot\.)[\s]*(version))",
         "context" : "comment,LABEL",
     },
     #{
