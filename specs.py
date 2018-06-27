@@ -3,13 +3,13 @@
 METADESC=[
     {
         "destLabel" : "base_image",
-        "regex" : "FROM",
+        "regex" : ".+",
         "context" : "FROM",
     },
     {
         "destLabel" : "software.version",
-        "regex" : "(software)[\s]*(version)",
-        "context" : "comment",
+        "regex" : "((software)[\s]*(version))",
+        "context" : "comment,LABEL",
     },
     #{
     #    "destLabel" : "software",
@@ -19,26 +19,26 @@ METADESC=[
     {
         "destLabel" : "about.summary",
         "regex" : "(description)",
-        "context" : "comment",
+        "context" : "comment,LABEL",
     },
     {
         "destLabel" : "about.home",
-        "regex" : "(website)",
-        "context" : "comment",
+        "regex" : "(website|homepage)",
+        "context" : "comment,LABEL",
     },
     {
         "destLabel" : "about.documentation",
         "regex" : "(documentation)",
-        "context" : "comment",
+        "context" : "comment,LABEL",
     },
     {
         "destLabel" : "about.license",
         "regex" : "(license)",
-        "context" : "comment",
+        "context" : "comment,LABEL",
     },
-    {
-        "destLabel" : "MAINTAINER",
-        "regex" : "MAINTAINER",
-        "context" : "MAINTAINER",
-    }
+    #{
+    #    "destLabel" : "MAINTAINER",
+    #    "regex" : "MAINTAINER",
+    #    "context" : "MAINTAINER",
+    #}
 ]

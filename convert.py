@@ -14,20 +14,24 @@ from specs import *
 BLACKLIST=re.compile("^(bioconda|debian)")
 TOOLSPATH="https://docker-ui.genouest.org/container/all?light=true"
 DOCKERFILESROOt="https://docker-ui.genouest.org/container/"
-EXTRAREGEX="(:)*(\s)*"
+EXTRAREGEX="(\s)*(:|=)*(\s)*"
 EMPTY_RE = re.compile("^[\s]*$")
 OUTROOT = "./myDockerfiles"
+TOTALCOUNT = 0
+INST_PARSE = re.compile("(\s){3,}")
 
 ##############Acquiring the original Dockerfiles#################
 
 def get_tools_ids (url,ignoreRegex):
     r = requests.get (url)
     myTools=list()
+    global TOTALCOUNT
 
     for crt_entry in r.json():
         if crt_entry.get("visible"):
-            if not ignoreRegex.search(crt_entry.get("id")):
-                if crt_entry.get("meta").get("Dockerfile"):
+            if crt_entry.get("meta").get("Dockerfile"):
+                TOTALCOUNT = TOTALCOUNT + 1
+                if not ignoreRegex.search(crt_entry.get("id")):
                     myTools.append(crt_entry.get("id"))
 
     #print myTools
@@ -44,22 +48,42 @@ def get_tool_dockerfile (url, id):
 def parse_comment_line (line, metadataList):
     for crt_meta in metadataList:
         crt_expr=re.compile(crt_meta.get("regex"), re.IGNORECASE)
-        if crt_meta.get("context")=="comment" and crt_expr.search(line):
-            #print crt_meta.get("destLabel") + " found in " + line
-            split_regex = re.compile(crt_meta.get("regex")+EXTRAREGEX, re.IGNORECASE)
-            crt_value = split_regex.split(line)[-1]
-            if not EMPTY_RE.search(crt_value):
-                #print crt_meta.get("destLabel") + " found: " + crt_value
-                #crt_meta["value"]=crt_value
-                return [crt_meta.get("destLabel"), crt_value]
+        if "comment" in crt_meta.get("context") and crt_expr.search(line):
+            #split_regex = re.compile(crt_meta.get("regex")+EXTRAREGEX, re.IGNORECASE)
+            #crt_value = split_regex.split(line)[-1]
+            #if not EMPTY_RE.search(crt_value):
+            #    return [crt_meta.get("destLabel"), crt_value]
+            return extract_meta_from_string(crt_meta, line)
     return None
 
 def look_for_this_meta(metadata_desc, dfp):
     for crt_inst in dfp.structure:
-        if crt_inst.get("instruction")==metadata_desc.get("context"):
-            #print crt_inst.get("value")
-            return [metadata_desc.get("destLabel"), crt_inst.get("value")]
+        #if crt_inst.get("instruction")==metadata_desc.get("context"):
+        #print (crt_inst)
+        if crt_inst.get("instruction") in metadata_desc.get("context"):
+            #print (crt_inst.get("value"))
+            ###There could be multiple lines to that instruction, each line must be parsed separately
+            subInst = INST_PARSE.split(crt_inst.get("value"))
+            #print (subInst)
+            return find_meta_in_instruction (metadata_desc, subInst)
+            #return [metadata_desc.get("destLabel"), crt_inst.get("value")]
     return None
+
+def find_meta_in_instruction (meta_desc, instPieces):
+    crt_expr = re.compile(meta_desc.get("regex"), re.IGNORECASE)
+    for crt_piece in instPieces:
+        if crt_expr.search (crt_piece):
+            #print ("Found meta "+meta_desc.get("destLabel")+" here: "+crt_piece)
+            return extract_meta_from_string(meta_desc, crt_piece)
+
+def extract_meta_from_string (meta_desc, string_with_meta):
+    split_regex = re.compile(meta_desc.get("regex")+EXTRAREGEX, re.IGNORECASE)
+    crt_value = split_regex.split(string_with_meta)[-1]
+    if not EMPTY_RE.search(crt_value):
+        print ("META "+meta_desc.get("destLabel")+" <---- "+crt_value)
+        return [meta_desc.get("destLabel"), crt_value]
+    return None
+
 #####################Misc####################
 
 def update_version_and_name (labels):
@@ -93,10 +117,14 @@ def update_version_and_name (labels):
 #################Writing output#####################
 
 def create_labels_line (labelsDict):
-    myLines=list()
+    if len(labelsDict) == 0:
+        print ("No labels found for this tool")
+        return ("#No labels found for this tool")
+    labels = "LABELS autogen=\"yes\""
     for crt_meta in labelsDict.keys():
-        print (crt_meta)
-    return "TODO"
+        #print (crt_meta)
+        labels = labels+" \\ \n\t"+crt_meta+"=\""+labelsDict.get(crt_meta)+"\""
+    return labels
 
 def print_in_order (labels, dfparsed, target_dfile):
     ##We only need to insert our labels at the start, after the FROM command
@@ -138,6 +166,7 @@ cmt_line_re = "^[\s]*#"
 
 ids=get_tools_ids(TOOLSPATH, BLACKLIST)
 #print len(ids)
+print ("THERE ARE "+ str(TOTALCOUNT) +" DOCKERFILES TOTAL IN BIOSHADOCK")
 
 for crt_id in ids:
     #this_tools_labels = list()
@@ -145,7 +174,7 @@ for crt_id in ids:
     ##Adding the tool's name to the labels
     #this_tools_labels.append(["software",crt_id.split("/")[-1]])
     this_tools_labels["software"]= crt_id.split("/")[-1]
-
+    print ("#####Current tool: "+this_tools_labels["software"]+"#####")
     crt_Dockerfile=get_tool_dockerfile(DOCKERFILESROOt, crt_id)
     lines = crt_Dockerfile.split("\n")
     ##Extracting what we can from the comments
@@ -167,4 +196,5 @@ for crt_id in ids:
                 this_tools_labels[crt_label[0]]=crt_label[1]
     #print (this_tools_labels)
     output_dockerfile (this_tools_labels, dfp, OUTROOT)
+    print ("##########")
 
