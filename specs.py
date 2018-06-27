@@ -8,7 +8,7 @@ METADESC=[
     },
     {
         "destLabel" : "software.version",
-        "regex" : "((software)[\s]*(version))",
+        "regex" : "((software)[\s]*(version))|(ANNOT.Version)",
         "context" : "comment,LABEL",
     },
     #{

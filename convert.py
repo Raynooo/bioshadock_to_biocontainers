@@ -73,14 +73,14 @@ def find_meta_in_instruction (meta_desc, instPieces):
     crt_expr = re.compile(meta_desc.get("regex"), re.IGNORECASE)
     for crt_piece in instPieces:
         if crt_expr.search (crt_piece):
-            #print ("Found meta "+meta_desc.get("destLabel")+" here: "+crt_piece)
+            crt_piece = crt_piece.replace ('"', '')
             return extract_meta_from_string(meta_desc, crt_piece)
 
 def extract_meta_from_string (meta_desc, string_with_meta):
     split_regex = re.compile(meta_desc.get("regex")+EXTRAREGEX, re.IGNORECASE)
     crt_value = split_regex.split(string_with_meta)[-1]
     if not EMPTY_RE.search(crt_value):
-        print ("META "+meta_desc.get("destLabel")+" <---- "+crt_value)
+        print ("META "+meta_desc.get("destLabel")+" <---- ["+repr(crt_value)+"]")
         return [meta_desc.get("destLabel"), crt_value]
     return None
 
@@ -98,12 +98,12 @@ def update_version_and_name (labels):
         clean_version = onlyV_re.search(match.group(0)).group(0)
         software = software[0:match.start(0)]
         if not version:
-            print ("    VERSION FOUND "+clean_version+" NEW NAME "+software)
+            print ("    VERSION FOUND "+repr(clean_version)+" NEW NAME "+repr(software))
             version = clean_version
         else:
-            print ("    UPDATING TOOL NAME TO "+software+ " (version is "+version+")")
+            print ("    UPDATING TOOL NAME TO "+repr(software)+ " (version is "+repr(version)+")")
             if not clean_version == version:
-                print ("        Warning, conflicting version name "+clean_version)
+                print ("        Warning, conflicting version name "+repr(clean_version))
     if not version:
         version = "DEFAULT"
     ##Updating entry label
@@ -174,7 +174,7 @@ for crt_id in ids:
     ##Adding the tool's name to the labels
     #this_tools_labels.append(["software",crt_id.split("/")[-1]])
     this_tools_labels["software"]= crt_id.split("/")[-1]
-    print ("#####Current tool: "+this_tools_labels["software"]+"#####")
+    print ("#####Current tool: "+repr(this_tools_labels["software"])+"#####")
     crt_Dockerfile=get_tool_dockerfile(DOCKERFILESROOt, crt_id)
     lines = crt_Dockerfile.split("\n")
     ##Extracting what we can from the comments
